@@ -25,3 +25,5 @@ grille = creer_grille()
 ajouter_tuile(grille)
 ajouter_tuile(grille)
 afficher_grille(grille)
+
+#test sur un autre pc le deposit
