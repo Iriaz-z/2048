@@ -1,5 +1,5 @@
-print("Hello, World!")
 import random
+import tkinter as ath
 
 def creer_grille():
     return [[0, 0, 0, 0] for _ in range(4)]
@@ -17,13 +17,105 @@ def ajouter_tuile(grille):
 def afficher_grille(grille):
     for ligne in grille:
         print("+----+----+----+----+")
-        print("|" + "|".join(f"{val or ' ':4}" for val in ligne) + "|")
+        print("|" + "|".join(f"{v or ' ':4}" for v in ligne) + "|")
     print("+----+----+----+----+")
 
-#les tests
+def deplacer(grille, direction):
+    if direction in ['z', 's']:
+        grille = [list(x) for x in zip(*grille)]
+    for i in range(4):
+        if direction in ['q', 'z']:
+            grille[i] = fusionner_ligne(grille[i])
+        else:
+            grille[i] = fusionner_ligne(grille[i][::-1])[::-1]
+    if direction in ['z', 's']:
+        grille = [list(x) for x in zip(*grille)]
+    return grille
+    
+def fusionner_ligne(ligne):
+    ligne = [v for v in ligne if v != 0]
+    for i in range(len(ligne) - 1):
+        if ligne[i] == ligne[i + 1]:
+            ligne[i] *= 2
+            ligne[i + 1] = 0
+    ligne = [v for v in ligne if v != 0]
+    while len(ligne) < 4:
+        ligne.append(0)
+    return ligne
+
+def grille_pleine(grille):
+    return all(v != 0 for ligne in grille for v in ligne)
+
+def mouvements_possibles(grille):
+    if not grille_pleine(grille):
+        return True
+    for i in range(4):
+        for j in range(4):
+            if i < 3 and grille[i][j] == grille[i + 1][j]:
+                return True
+            if j < 3 and grille[i][j] == grille[i][j + 1]:
+                return True
+    return False
+
+def test_win(grille):
+    return any(v >= 2048 for ligne in grille for v in ligne)
+
+def mettre_a_jour_grille():
+    for i in range(4):
+        for j in range(4):
+            valeur = grille[i][j]
+            case = cases[i][j]
+            case.config(text=str(valeur) if valeur else "", bg=COULEURS.get(valeur, "#cdc1b4"))
+
+def jouer(direction):
+    global grille
+    nouvelle_grille = deplacer(grille, direction)
+    if nouvelle_grille != grille:
+        grille = nouvelle_grille
+        ajouter_tuile(grille)
+        mettre_a_jour_grille()
+        if test_win(grille):
+            label_status.config(text="Félicitations, vous avez gagné !", fg="green")
+        elif not mouvements_possibles(grille):
+            label_status.config(text="Game Over !", fg="red")
+
+COULEURS = {
+    0: "#cdc1b4",
+    2: "#eee4da",
+    4: "#ede0c8",
+    8: "#f2b179",
+    16: "#f59563",
+    32: "#f67c5f",
+    64: "#f65e3b",
+    128: "#edcf72",
+    256: "#edcc61",
+    512: "#edc850",
+    1024: "#edc53f",
+    2048: "#edc22e",
+}
+
+fenetre = ath.Tk()
+fenetre.title("2048 - projet")
 grille = creer_grille()
 ajouter_tuile(grille)
 ajouter_tuile(grille)
-afficher_grille(grille)
 
-#test sur un autre pc le deposit
+cases = [[None for _ in range(4)] for _ in range(4)]
+frame_grille = ath.Frame(fenetre, bg="#bbada0", bd=3)
+frame_grille.grid(row=0, column=0)
+for i in range(4):
+    for j in range(4):
+        case = ath.Label(frame_grille, text="", width=4, height=2, font=("Helvetica", 24), bg="#cdc1b4", fg="#776e65")
+        case.grid(row=i, column=j, padx=5, pady=5)
+        cases[i][j] = case
+
+label_status = ath.Label(fenetre, text="Touches : Z (haut), Q (gauche), S (bas), D (droite)", font=(12))
+label_status.grid(row=1, column=0)
+
+fenetre.bind("<z>", lambda event: jouer("z"))
+fenetre.bind("<s>", lambda event: jouer("s"))
+fenetre.bind("<q>", lambda event: jouer("q"))
+fenetre.bind("<d>", lambda event: jouer("d"))
+
+mettre_a_jour_grille()
+fenetre.mainloop()
